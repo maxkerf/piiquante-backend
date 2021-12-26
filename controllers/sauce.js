@@ -1,5 +1,4 @@
 const fs = require("fs");
-const { setUncaughtExceptionCaptureCallback } = require("process");
 
 const Sauce = require("../models/Sauce");
 
@@ -24,7 +23,7 @@ exports.getOneSauce = (req, res) => {
 exports.createSauce = (req, res) => {
 	const sauceObject = JSON.parse(req.body.sauce);
 	// replace or specify the user id of the sauce in creation by/with the user id of the decoded token
-	sauceObject.usersId = res.locals.tokenUserId;
+	sauceObject.userId = res.locals.tokenUserId;
 
 	const sauce = new Sauce({
 		...sauceObject,

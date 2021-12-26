@@ -8,7 +8,7 @@ const sauceRoutes = require("./routes/sauce");
 const app = express();
 
 mongoose
-	.connect("Connection string required", {
+	.connect(process.env.MONGO_DB_KEY, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
 	})

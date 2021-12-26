@@ -1,1 +1,1 @@
-Don't forget to add your MongoDB database connection string to the connect() function in app.js !
+Don't forget to rename the ".env_sample" file into ".env" and add your MongoDB database connection string to it, thanks & have fun!
