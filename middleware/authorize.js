@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const Sauce = require("../models/Sauce");
 
 exports.token = (req, res, next) => {
 	try {
@@ -17,19 +16,9 @@ exports.token = (req, res, next) => {
 };
 
 exports.sauce = (req, res, next) => {
-	const sauceId = req.params.id;
+	// check if the sauce truly belongs to the requester
+	if (req.sauce.userId !== res.locals.tokenUserId)
+		return res.status(403).json({ error: "Sauce non possédée..." });
 
-	if (sauceId) {
-		// try to catch the user id of the sauce
-		Sauce.findOne({ _id: sauceId })
-			.then(sauce => {
-				// check if the sauce truly belongs to the requester
-				if (sauce.userId === res.locals.tokenUserId) {
-					next();
-				} else {
-					res.status(403).json({ error: "Eh oh, ce n'est pas ta sauce !" });
-				}
-			})
-			.catch(error => res.status(400).json({ error: "Sauce introuvable..." }));
-	}
+	next();
 };

@@ -1,25 +1,10 @@
-const normalizePort = val => {
-	const port = parseInt(val, 10);
-
-	if (isNaN(port)) {
-		return val;
-	}
-
-	if (port >= 0) {
-		return port;
-	}
-
-	return false;
-};
-
 const errorHandler = error => {
-	if (error.syscall !== "listen") {
-		throw error;
-	}
+	if (error.syscall !== "listen") throw error;
 
 	const address = server.address();
-	const bind =
-		typeof address === "string" ? "pipe " + address : "port: " + port;
+	/* const bind =
+		typeof address === "string" ? "pipe " + address : "port: " + port; */
+	const bind = `port: ${address.port}`;
 
 	switch (error.code) {
 		case "EACCES":
@@ -35,20 +20,20 @@ const errorHandler = error => {
 	}
 };
 
-require("dotenv").config();
 const http = require("http");
+require("dotenv").config();
 const app = require("./app");
-
-const port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
 
 const server = http.createServer(app);
 
 server.on("error", errorHandler);
-server.on("listening", () => {
-	const address = server.address();
-	const bind = typeof address === "string" ? `pipe ${address}` : `port ${port}`;
-	console.log(`Listening on ${bind}`);
-});
+server.on("listening", () =>
+	console.log(`Listening on port ${server.address().port}`)
+);
 
-server.listen(port);
+/* const address = server.address();
+const bind =
+	typeof address === "string" ? `pipe ${address}` : `port ${address.port}`;
+console.log(`Listening on ${bind}`); */
+
+server.listen(process.env.PORT);

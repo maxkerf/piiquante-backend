@@ -1,11 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const path = require("path");
 
 const userRoutes = require("./routes/user");
 const sauceRoutes = require("./routes/sauce");
-
-const app = express();
 
 mongoose
 	.connect(process.env.MONGO_DB_KEY, {
@@ -13,22 +10,33 @@ mongoose
 		useUnifiedTopology: true,
 	})
 	.then(() => console.log("Connexion à MongoDB réussie !"))
-	.catch(() => console.error("Connexion à MongoDB échouée..."));
+	.catch(() =>
+		console.error(
+			'Connexion à MongoDB échouée...\nVeuillez consulter le fichier "README.md" pour plus d\'informations.'
+		)
+	);
 
+const app = express();
+
+// avoid CORS errors
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.setHeader(
-		"Access-Control-Allow-Headers",
-		"Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
-	);
-	res.setHeader(
-		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, DELETE, PATCH, OPTIONS"
-	);
+	res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+
+	// Response to preflight request must have http ok status (it allows me to use "router.use(someMiddleware)" without CORS errors)
+	if (req.method === "OPTIONS") {
+		res.sendStatus(200);
+		return;
+	}
+
 	next();
 });
 
-app.use("/images", express.static(path.join(__dirname, "images")));
+// avoid "/images" URLs considered as routes
+app.use("/images", express.static("images"));
+
+// parse requests with JSON & create a body object (req.body)
 app.use(express.json());
 
 app.use("/api/auth", userRoutes);
