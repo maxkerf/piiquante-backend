@@ -30,7 +30,8 @@ router.param("id", (req, res, next, sauceId) => {
 			// when the "_id" string is long enough (24 characters here), if no sauce is found, then "findOne()" returns null
 			if (sauce === null) throw "Sauce introuvable...";
 
-			req.sauce = sauce;
+			res.locals.sauce = sauce;
+
 			next();
 		})
 		.catch(error => {

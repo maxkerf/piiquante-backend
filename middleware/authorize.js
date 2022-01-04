@@ -5,9 +5,8 @@ exports.token = (req, res, next) => {
 		// optional chaining "?." checks if authorization exists or not & return "undefined" if not
 		const token = req.headers.authorization?.split(" ")[1];
 		const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
-		const tokenUserId = decodedToken.userId;
 
-		res.locals.tokenUserId = tokenUserId;
+		res.locals.userId = decodedToken.userId;
 
 		next();
 	} catch (error) {
@@ -16,8 +15,11 @@ exports.token = (req, res, next) => {
 };
 
 exports.sauce = (req, res, next) => {
+	const userId = res.locals.userId;
+	const sauce = res.locals.sauce;
+
 	// check if the sauce truly belongs to the requester
-	if (req.sauce.userId !== res.locals.tokenUserId)
+	if (sauce.userId !== userId)
 		return res.status(403).json({ error: "Sauce non possédée..." });
 
 	next();

@@ -44,7 +44,7 @@ exports.getAllSauces = (req, res) => {
 exports.createSauce = (req, res) => {
 	const sauceObject = JSON.parse(req.body.sauce);
 	// replace or specify the user id of the sauce in creation by/with the user id of the decoded token
-	sauceObject.userId = res.locals.tokenUserId;
+	sauceObject.userId = res.locals.userId;
 
 	const sauce = new Sauce({
 		...sauceObject,
@@ -64,10 +64,12 @@ exports.createSauce = (req, res) => {
 };
 
 exports.getOneSauce = (req, res) => {
-	res.status(200).json(req.sauce);
+	res.status(200).json(res.locals.sauce);
 };
 
 exports.updateSauce = (req, res) => {
+	const sauce = res.locals.sauce;
+
 	if (req.file) {
 		const sauceObject = {
 			...JSON.parse(req.body.sauce),
@@ -77,36 +79,38 @@ exports.updateSauce = (req, res) => {
 		};
 
 		// delete the previous image from the storage before sauce update
-		const filename = req.sauce.imageUrl.split("/images/")[1];
+		const filename = sauce.imageUrl.split("/images/")[1];
 
 		fs.unlink(`images/${filename}`, () => {
-			Sauce.updateOne(req.sauce, sauceObject)
+			Sauce.updateOne({ _id: sauce._id }, sauceObject)
 				.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
 				.catch(error => res.status(400).json({ error }));
 		});
 	} else {
 		const sauceObject = { ...req.body };
 
-		Sauce.updateOne(req.sauce, sauceObject)
+		Sauce.updateOne({ _id: sauce._id }, sauceObject)
 			.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
 			.catch(error => res.status(400).json({ error }));
 	}
 };
 
 exports.deleteSauce = (req, res) => {
-	const filename = req.sauce.imageUrl.split("/images/")[1];
+	const sauce = res.locals.sauce;
+
+	const filename = sauce.imageUrl.split("/images/")[1];
 
 	fs.unlink(`images/${filename}`, () => {
-		Sauce.deleteOne(req.sauce)
+		Sauce.deleteOne({ _id: sauce._id })
 			.then(() => res.status(200).json({ message: "Sauce supprimée !" }))
 			.catch(error => res.status(400).json({ error }));
 	});
 };
 
 exports.likeSauce = (req, res) => {
-	const sauce = req.sauce;
+	const userId = res.locals.userId;
+	const sauce = res.locals.sauce;
 	const likeStatus = req.body.like;
-	const userId = res.locals.tokenUserId;
 
 	switch (likeStatus) {
 		case LIKE:
