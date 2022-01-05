@@ -2,9 +2,10 @@
 	"name": "backend",
 	"version": "1.0.0",
 	"description": "",
-	"main": "./dist/app.bundle.js",
+	"main": "./dist/bundle.js",
 	"scripts": {
-		"build": "webpack"
+		"build": "webpack",
+		"watch": "webpack --watch"
 	},
 	"repository": {
 		"type": "git",

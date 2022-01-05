@@ -4,7 +4,7 @@ exports.token = (req, res, next) => {
 	try {
 		// optional chaining "?." checks if authorization exists or not & return "undefined" if not
 		const token = req.headers.authorization?.split(" ")[1];
-		const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
+		const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET_KEY);
 
 		res.locals.userId = decodedToken.userId;
 

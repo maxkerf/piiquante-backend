@@ -7,30 +7,62 @@ const DISLIKE = -1;
 const UNLIKE = 0;
 const UNDISLIKE = UNLIKE;
 
+/**
+ * Add a like to a sauce and add the user who liked it to the list of the users who liked it.
+ * @param {Sauce} sauce The sauce to like.
+ * @param {string} userId The id of the user who liked the sauce.
+ */
 const like = (sauce, userId) => {
 	sauce.likes++;
 	sauce.usersLiked.push(userId);
 };
 
+/**
+ * Add a dislike to a sauce and add the user who disliked it to the list of the users who disliked it.
+ * @param {Sauce} sauce The sauce to dislike.
+ * @param {string} userId The id of the user who disliked the sauce.
+ */
 const dislike = (sauce, userId) => {
 	sauce.dislikes++;
 	sauce.usersDisliked.push(userId);
 };
 
+/**
+ * Remove a like from a sauce and remove the user who unliked it from the list of the users who liked it.
+ * @param {Sauce} sauce The sauce to unlike.
+ * @param {string} userId The id of the user who unliked the sauce.
+ */
 const unlike = (sauce, userId) => {
 	sauce.likes--;
 	sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
 };
 
+/**
+ * Remove a dislike from a sauce and remove the user who undisliked it from the list of the users who disliked it.
+ * @param {Sauce} sauce The sauce to undislike.
+ * @param {string} userId The id of the user who undisliked the sauce.
+ */
 const undislike = (sauce, userId) => {
 	sauce.dislikes--;
 	sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
 };
 
+/**
+ * Check if the user has already liked the given sauce or not.
+ * @param {Sauce} sauce
+ * @param {string} userId
+ * @return {boolean} Boolean true if the sauce is already liked by the user, false if not.
+ */
 const hasLiked = (sauce, userId) => {
 	return sauce.usersLiked.find(id => id === userId);
 };
 
+/**
+ * Check if the user has already disliked the given sauce or not.
+ * @param {Sauce} sauce
+ * @param {string} userId
+ * @return {boolean} Boolean true if the sauce is already disliked by the user, false if not.
+ */
 const hasDisliked = (sauce, userId) => {
 	return sauce.usersDisliked.find(id => id === userId);
 };
@@ -84,14 +116,14 @@ exports.updateSauce = (req, res) => {
 		fs.unlink(`images/${filename}`, () => {
 			Sauce.updateOne({ _id: sauce._id }, sauceObject)
 				.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
-				.catch(error => res.status(400).json({ error }));
+				.catch(error => res.status(500).json({ error }));
 		});
 	} else {
 		const sauceObject = { ...req.body };
 
 		Sauce.updateOne({ _id: sauce._id }, sauceObject)
 			.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
-			.catch(error => res.status(400).json({ error }));
+			.catch(error => res.status(500).json({ error }));
 	}
 };
 
@@ -103,7 +135,7 @@ exports.deleteSauce = (req, res) => {
 	fs.unlink(`images/${filename}`, () => {
 		Sauce.deleteOne({ _id: sauce._id })
 			.then(() => res.status(200).json({ message: "Sauce supprimée !" }))
-			.catch(error => res.status(400).json({ error }));
+			.catch(error => res.status(500).json({ error }));
 	});
 };
 
@@ -140,5 +172,5 @@ exports.likeSauce = (req, res) => {
 
 	Sauce.updateOne({ _id: sauce._id }, sauce)
 		.then(() => res.status(200).json({ message: "Sauce likée !" }))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
