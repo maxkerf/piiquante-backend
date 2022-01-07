@@ -147,7 +147,7 @@ exports.likeSauce = (req, res) => {
 	switch (likeStatus) {
 		case LIKE:
 			if (hasLiked(sauce, userId))
-				return res.status(400).json({ error: "Sauce déjà likée..." });
+				return res.status(400).json({ message: "Sauce déjà likée..." });
 			else if (hasDisliked(sauce, userId)) undislike(sauce, userId);
 
 			like(sauce, userId);
@@ -155,7 +155,7 @@ exports.likeSauce = (req, res) => {
 
 		case DISLIKE:
 			if (hasDisliked(sauce, userId))
-				return res.status(400).json({ error: "Sauce déjà dislikée..." });
+				return res.status(400).json({ message: "Sauce déjà dislikée..." });
 			else if (hasLiked(sauce, userId)) unlike(sauce, userId);
 
 			dislike(sauce, userId);

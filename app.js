@@ -1,21 +1,22 @@
-const express = require("express");
+const globalFunctions = require("./globalFunctions");
+
+/* Step 1: connect to the MongoDB database asynchronously */
+
 const mongoose = require("mongoose");
 
-const userRoutes = require("./routes/user");
-const sauceRoutes = require("./routes/sauce");
+mongoose.connect(process.env.MONGO_DB_KEY).catch(error => {
+	console.error("Failed to connect to MongoDB...");
+	globalFunctions.showError(error);
+});
 
-mongoose
-	.connect(process.env.MONGO_DB_KEY, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	})
-	.then(() => console.log("Connexion à MongoDB réussie !"))
-	.catch(() =>
-		console.error(
-			'Connexion à MongoDB échouée...\nVeuillez consulter le fichier "README.md" pour plus d\'informations.'
-		)
-	);
+// db for database
+const db = mongoose.connection;
+db.once("open", () => console.log("Connected to MongoDB!"));
+db.on("error", globalFunctions.showError);
 
+/* Step 2: create & configurate the express app */
+
+const express = require("express");
 const app = express();
 
 // avoid CORS errors
@@ -32,12 +33,13 @@ app.use((req, res, next) => {
 
 	next();
 });
-
 // avoid "/images" URLs considered as routes
 app.use("/images", express.static("images"));
-
 // parse requests with JSON & create a body object (req.body)
 app.use(express.json());
+
+const userRoutes = require("./routes/user");
+const sauceRoutes = require("./routes/sauce");
 
 app.use("/api/auth", userRoutes);
 app.use("/api/sauces", sauceRoutes);

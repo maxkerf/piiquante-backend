@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const auth = require("../middleware/authorize");
-const multer = require("../middleware/multer");
+const auth = require("../middlewares/authorize");
+const multer = require("../middlewares/multer");
 
 const Sauce = require("../models/Sauce");
 const sauceCtrl = require("../controllers/sauce");
@@ -27,7 +27,10 @@ router.post("/:id/like", sauceCtrl.likeSauce);
 router.param("id", async (req, res, next, sauceId) => {
 	try {
 		const sauce = await Sauce.findOne({ _id: sauceId });
-		if (!sauce) return res.status(400).json({ error: "Sauce introuvable..." });
+
+		if (!sauce)
+			return res.status(400).json({ message: "Sauce introuvable..." });
+
 		res.locals.sauce = sauce;
 
 		next();

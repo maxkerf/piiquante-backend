@@ -1,39 +1,47 @@
-const errorHandler = error => {
-	if (error.syscall !== "listen") throw error;
+require("dotenv").config();
 
-	const address = server.address();
-	/* const bind =
-		typeof address === "string" ? "pipe " + address : "port: " + port; */
-	const bind = `port: ${address.port}`;
+const globalFunctions = require("./globalFunctions");
+
+/**
+ * Summarize the error using a short sentence, then show it completely.
+ * @param {Object} error The error to handle.
+ */
+const errorHandler = error => {
+	const bind = `Port ${error.port}`;
 
 	switch (error.code) {
 		case "EACCES":
 			console.error(bind + " requires elevated privileges.");
-			process.exit(1);
 			break;
 		case "EADDRINUSE":
 			console.error(bind + " is already in use.");
-			process.exit(1);
 			break;
 		default:
-			throw error;
 	}
+
+	//globalFunctions.showError(error);
+	process.exit(1);
 };
 
 const http = require("http");
-require("dotenv").config();
 const app = require("./app");
 
 const server = http.createServer(app);
 
 server.on("error", errorHandler);
 server.on("listening", () =>
-	console.log(`Listening on port ${server.address().port}`)
+	console.log(`Listening on port ${server.address().port}!`)
 );
+try {
+	server.listen(process.env.PORT || 3000);
+} catch (error) {
+	switch (error.code) {
+		case "ERR_SOCKET_BAD_PORT":
+			console.error("Port should be >= 0 and < 65536.");
+			break;
+		default:
+			globalFunctions.showError(error);
+	}
 
-/* const address = server.address();
-const bind =
-	typeof address === "string" ? `pipe ${address}` : `port ${address.port}`;
-console.log(`Listening on ${bind}`); */
-
-server.listen(process.env.PORT);
+	process.exit(1);
+}

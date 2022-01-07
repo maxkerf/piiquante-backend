@@ -20,7 +20,7 @@ exports.sauce = (req, res, next) => {
 
 	// check if the sauce truly belongs to the requester
 	if (sauce.userId !== userId)
-		return res.status(403).json({ error: "Sauce non possédée..." });
+		return res.status(403).json({ message: "Sauce non possédée..." });
 
 	next();
 };
