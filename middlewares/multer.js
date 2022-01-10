@@ -7,22 +7,14 @@ const MIME_TYPES = {
 };
 
 const storage = multer.diskStorage({
-	destination: (req, file, callback) => {
-		callback(null, "images");
-	},
+	destination: (req, file, callback) => callback(null, "images"),
 	filename: (req, file, callback) => {
-		/* let name = file.originalname;
-
-		// remove the extension part from the filename
-		name = name.slice(0, name.lastIndexOf("."));
-
-		// change the escape characters into underscore ones
-		name = name.split(" ").join("_"); */
-
+		const currentTime = Date.now();
+		// generate a random number and transform it into a string to slice it and keep only the decimal part
+		const randomNumber = Math.random().toString().slice(2);
 		const extension = MIME_TYPES[file.mimetype];
 
-		//callback(null, `${name}_${Date.now()}.${extension}`);
-		callback(null, `${Date.now()}.${extension}`);
+		callback(null, `sauce_${currentTime}_${randomNumber}.${extension}`);
 	},
 });
 

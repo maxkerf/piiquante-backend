@@ -17,6 +17,7 @@ const errorHandler = error => {
 			console.error(bind + " is already in use.");
 			break;
 		default:
+			globalFunctions.showError(error);
 	}
 
 	//globalFunctions.showError(error);
