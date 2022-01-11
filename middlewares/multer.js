@@ -1,18 +1,13 @@
 const multer = require("multer");
 
-const MIME_TYPES = {
-	"image/jpg": "jpg",
-	"image/jpeg": "jpg",
-	"image/png": "png",
-};
-
 const storage = multer.diskStorage({
 	destination: (req, file, callback) => callback(null, "images"),
 	filename: (req, file, callback) => {
 		const currentTime = Date.now();
 		// generate a random number and transform it into a string to slice it and keep only the decimal part
 		const randomNumber = Math.random().toString().slice(2);
-		const extension = MIME_TYPES[file.mimetype];
+		let extension = file.mimetype.split("/")[1];
+		if (extension === "jpeg") extension = "jpg";
 
 		callback(null, `sauce_${currentTime}_${randomNumber}.${extension}`);
 	},

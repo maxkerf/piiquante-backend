@@ -72,6 +72,46 @@ const hasDisliked = (sauce, userId) => {
 /* INPUT CHECKS */
 
 /**
+ * Check if the image file input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {Object} file The file to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
+const checkImage = (file, res) => {
+	// here the authorized extensions (file types)
+	const EXTENSIONS = ["jpg", "jpeg", "png"];
+
+	let isValid = true;
+	let message;
+
+	// check if the file exists
+	if (!file) {
+		isValid = false;
+		message = "Image requise.";
+	}
+	// check if the file type is correct
+	else if (
+		!EXTENSIONS.find(extension => file.mimetype.split("/")[1] === extension)
+	) {
+		isValid = false;
+		message = `Image invalide (extensions autorisées : ${EXTENSIONS.join(
+			"/"
+		)}).`;
+
+		// remove the image already saved by multer
+		fs.unlink(`images/${file.filename}`, error => {
+			if (error) console.error(error);
+		});
+	}
+
+	if (!isValid) res.status(400).json({ message });
+
+	return isValid;
+};
+
+/**
  * Check if the name input is valid or not.
  *
  * If it is not valid, send a response with a 400 (bad request) to the client.
@@ -324,8 +364,7 @@ exports.getAllSauces = (req, res) => {
  * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
  */
 exports.createSauce = (req, res) => {
-	// the image file is required for good processing
-	if (!req.file) return res.status(400).json({ message: "Image requise." });
+	if (!checkImage(req.file, res)) return;
 
 	// return en empty object if the data is not found, the input checks will block further operations
 	const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
@@ -399,13 +438,12 @@ exports.updateSauce = (req, res) => {
 
 	// WITH THE IMAGE FILE
 	if (contentType === "multipart/form-data") {
-		// when using multipart/form-data the image file is required for good processing
-		if (!req.file) return res.status(400).json({ message: "Image requise." });
+		if (!checkImage(req.file, res)) return;
 
 		// return en empty object if the data is not found, the input checks will block further operations
 		const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 
-		// check every inputs
+		// check every other inputs
 		if (!checkAddSauceForm(sauceObject, res)) {
 			// remove the image already saved by multer
 			fs.unlink(`images/${req.file.filename}`, error => {
