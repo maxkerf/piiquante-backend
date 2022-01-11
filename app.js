@@ -26,10 +26,7 @@ app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 
 	// Response to preflight request must have http ok status (it allows me to use "router.use(someMiddleware)" without CORS errors)
-	if (req.method === "OPTIONS") {
-		res.sendStatus(200);
-		return;
-	}
+	if (req.method === "OPTIONS") return res.sendStatus(200);
 
 	next();
 });

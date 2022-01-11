@@ -1,5 +1,13 @@
 const jwt = require("jsonwebtoken");
 
+/**
+ * Check with the "jsonwebtoken" library if the token specified in the authorization header is valid or not.
+ *
+ * If an error occured, send a response with a 401 (unauthorized) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ */
 exports.token = (req, res, next) => {
 	try {
 		// optional chaining "?." checks if authorization exists or not & return "undefined" if not
@@ -14,11 +22,19 @@ exports.token = (req, res, next) => {
 	}
 };
 
+/**
+ * Check if the sauce truly belongs to the requester.
+ *
+ * If the sauce does not belong to the requester, send a response with a 403 (forbidden) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @returns If the sauce does not belong to the requester, stop the process by returning the function.
+ */
 exports.sauce = (req, res, next) => {
 	const userId = res.locals.userId;
 	const sauce = res.locals.sauce;
 
-	// check if the sauce truly belongs to the requester
 	if (sauce.userId !== userId)
 		return res.status(403).json({ message: "Sauce non possédée..." });
 

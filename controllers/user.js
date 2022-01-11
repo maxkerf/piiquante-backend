@@ -3,6 +3,16 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 
+/* INPUT CHECKS */
+
+/**
+ * Check if the email input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkEmail = (data, res) => {
 	let isValid = true;
 	let message;
@@ -34,6 +44,14 @@ const checkEmail = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the password input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkPassword = (data, res) => {
 	let isValid = true;
 	let message;
@@ -59,10 +77,33 @@ const checkPassword = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the sign up form is valid or not by checking one by one the inputs.
+ *
+ * If one input check is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} email First input to check.
+ * @param {*} password Second input to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkSignUpForm = (email, password, res) => {
 	return checkEmail(email, res) && checkPassword(password, res);
 };
 
+/* REQUESTS */
+
+/**
+ * Sign up a new user and store it in the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ *
+ * If everything goes well, send a 201 (created) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
+ */
 exports.signup = async (req, res) => {
 	try {
 		const email = req.body.email;
@@ -88,6 +129,18 @@ exports.signup = async (req, res) => {
 	}
 };
 
+/**
+ * Login a user.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ *
+ * If everything goes well, send a 200 (OK) code to the client with an access token for further requests.
+ * @param {*} req
+ * @param {*} res
+ * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
+ */
 exports.login = async (req, res) => {
 	try {
 		const email = req.body.email;

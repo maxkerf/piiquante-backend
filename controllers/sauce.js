@@ -2,12 +2,12 @@ const fs = require("fs");
 
 const Sauce = require("../models/Sauce");
 
+/* LIKE LOGIC */
+
 const LIKE = 1;
 const DISLIKE = -1;
 const UNLIKE = 0;
 const UNDISLIKE = UNLIKE;
-
-/* LIKE LOGIC */
 
 /**
  * Add a like to a sauce and add the user who liked it to the list of the users who liked it.
@@ -69,8 +69,16 @@ const hasDisliked = (sauce, userId) => {
 	return sauce.usersDisliked.find(id => id === userId);
 };
 
-/* CHECKS */
+/* INPUT CHECKS */
 
+/**
+ * Check if the name input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkName = (data, res) => {
 	let isValid = true;
 	let message;
@@ -96,6 +104,14 @@ const checkName = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the manufacturer input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkManufacturer = (data, res) => {
 	let isValid = true;
 	let message;
@@ -121,6 +137,14 @@ const checkManufacturer = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the description input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkDescription = (data, res) => {
 	let isValid = true;
 	let message;
@@ -146,6 +170,14 @@ const checkDescription = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the main pepper input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkMainPepper = (data, res) => {
 	let isValid = true;
 	let message;
@@ -173,6 +205,14 @@ const checkMainPepper = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the heat input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkHeat = (data, res) => {
 	let isValid = true;
 	let message;
@@ -198,6 +238,14 @@ const checkHeat = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the like status input is valid or not.
+ *
+ * If it is not valid, send a response with a 400 (bad request) to the client.
+ * @param {*} data The data to check.
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkLikeStatus = (data, res) => {
 	let isValid = true;
 	let message;
@@ -223,6 +271,19 @@ const checkLikeStatus = (data, res) => {
 	return isValid;
 };
 
+/**
+ * Check if the add sauce form is valid or not by checking one by one the inputs.
+ *
+ * If one input check is not valid, send a response with a 400 (bad request) to the client.
+ * @param {Object} sauce The temporary sauce object created to check.
+ * @param {string} sauce.name
+ * @param {string} sauce.manufacturer
+ * @param {string} sauce.description
+ * @param {string} sauce.mainPepper
+ * @param {number} sauce.heat
+ * @param {Object} res The response object of the express app.
+ * @returns {boolean} Boolean true if it is valid, false if not.
+ */
 const checkAddSauceForm = (sauce, res) => {
 	return (
 		checkName(sauce.name, res) &&
@@ -235,18 +296,39 @@ const checkAddSauceForm = (sauce, res) => {
 
 /* REQUESTS */
 
+/**
+ * Get all the sauces from the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If everything goes well, send a 200 (OK) code to the client with the desired data.
+ * @param {*} req
+ * @param {*} res
+ */
 exports.getAllSauces = (req, res) => {
 	Sauce.find()
 		.then(sauces => res.status(200).json(sauces))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
+/**
+ * Create a sauce and store it in the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ *
+ * If everything goes well, send a 201 (created) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
+ */
 exports.createSauce = (req, res) => {
 	const sauceObject = JSON.parse(req.body.sauce ? req.body.sauce : "{}");
 	// replace or specify the user id of the sauce in creation by/with the user id of the decoded token
 	sauceObject.userId = res.locals.userId;
 
-	// check image file input
+	// check the image file input
 	if (!req.file)
 		return res.status(400).json({ message: "Fichier image requis." });
 
@@ -276,20 +358,45 @@ exports.createSauce = (req, res) => {
 	sauce
 		.save()
 		.then(() => res.status(201).json({ message: "Sauce enregistrée !" }))
-		.catch(error => res.status(400).json({ error }));
+		.catch(error => res.status(500).json({ error }));
 };
 
+/**
+ * Get one sauce from the database.
+ *
+ * The process of getting the sauce is already done in the "router.param("id")" function in the sauces routes file (routes/sauce.js).
+ *
+ * Send a 200 (OK) code to the client with the desired data.
+ * @param {*} req
+ * @param {*} res
+ */
 exports.getOneSauce = (req, res) => {
 	res.status(200).json(res.locals.sauce);
 };
 
+/**
+ * Update a sauce stored in the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ *
+ * If everything goes well, send a 200 (OK) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
+ */
 exports.updateSauce = (req, res) => {
+	// first, good to know that a sauce can be updated following two different ways:
+	// - without the image file => JSON received in the request & parsed by express.json()
+	// - with the image file => multipart/form-data received in the request & parsed by multer
+
 	const sauce = res.locals.sauce;
 
 	// extract the content-type which could be more complex than just "application/json" for example
 	const contentType = req.headers["content-type"].split(";")[0];
 
-	// when using multipart/form-data the image file is required, otherwise, use a JSON file/body
+	// when using multipart/form-data the image file is required
 	if (contentType === "multipart/form-data" && !req.file)
 		return res.status(400).json({ message: "Fichier image requis." });
 
@@ -318,7 +425,8 @@ exports.updateSauce = (req, res) => {
 		const filename = sauce.imageUrl.split("/images/")[1];
 
 		// update the sauce only if the old image file is deleted
-		fs.unlink(`images/${filename}`, () => {
+		fs.unlink(`images/${filename}`, error => {
+			if (error) console.error(error);
 			Sauce.updateOne({ _id: sauce._id }, sauceObject)
 				.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
 				.catch(error => res.status(500).json({ error }));
@@ -330,19 +438,41 @@ exports.updateSauce = (req, res) => {
 	}
 };
 
+/**
+ * Delete a sauce stored in the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If everything goes well, send a 200 (OK) code to the client.
+ * @param {*} req
+ * @param {*} res
+ */
 exports.deleteSauce = (req, res) => {
 	const sauce = res.locals.sauce;
 
 	const filename = sauce.imageUrl.split("/images/")[1];
 
 	// delete the sauce only if the image file is deleted
-	fs.unlink(`images/${filename}`, () => {
+	fs.unlink(`images/${filename}`, error => {
+		if (error) console.error(error);
 		Sauce.deleteOne({ _id: sauce._id })
 			.then(() => res.status(200).json({ message: "Sauce supprimée !" }))
 			.catch(error => res.status(500).json({ error }));
 	});
 };
 
+/**
+ * Like a sauce stored in the database.
+ *
+ * If an error occured, send a 500 (internal server error) code to the client.
+ *
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ *
+ * If everything goes well, send a 200 (OK) code to the client.
+ * @param {*} req
+ * @param {*} res
+ * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
+ */
 exports.likeSauce = (req, res) => {
 	const userId = res.locals.userId;
 	const sauce = res.locals.sauce;

@@ -3,7 +3,7 @@ require("dotenv").config();
 const globalFunctions = require("./globalFunctions");
 
 /**
- * Summarize the error using a short sentence, then show it completely.
+ * Summarize the error using a short sentence or show it completely.
  * @param {Object} error The error to handle.
  */
 const errorHandler = error => {
@@ -20,7 +20,7 @@ const errorHandler = error => {
 			globalFunctions.showError(error);
 	}
 
-	//globalFunctions.showError(error);
+	// the app can't run without the backend server on
 	process.exit(1);
 };
 
@@ -33,6 +33,7 @@ server.on("error", errorHandler);
 server.on("listening", () =>
 	console.log(`Listening on port ${server.address().port}!`)
 );
+
 try {
 	server.listen(process.env.PORT || 3000);
 } catch (error) {
@@ -44,5 +45,6 @@ try {
 			globalFunctions.showError(error);
 	}
 
+	// the app can't run without the backend server on
 	process.exit(1);
 }
