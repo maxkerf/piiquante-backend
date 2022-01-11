@@ -324,13 +324,11 @@ exports.getAllSauces = (req, res) => {
  * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
  */
 exports.createSauce = (req, res) => {
-	const sauceObject = JSON.parse(req.body.sauce ? req.body.sauce : "{}");
-	// replace or specify the user id of the sauce in creation by/with the user id of the decoded token
-	sauceObject.userId = res.locals.userId;
+	// the image file is required for good processing
+	if (!req.file) return res.status(400).json({ message: "Image requise." });
 
-	// check the image file input
-	if (!req.file)
-		return res.status(400).json({ message: "Fichier image requis." });
+	// return en empty object if the data is not found, the input checks will block further operations
+	const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 
 	// check every other inputs
 	if (!checkAddSauceForm(sauceObject, res)) {
@@ -342,13 +340,16 @@ exports.createSauce = (req, res) => {
 		return;
 	}
 
-	const imageUrl = `${req.protocol}://${req.get("host")}/images/${
+	// replace or specify the user id of the sauce in creation by/with the user id of the decoded token
+	sauceObject.userId = res.locals.userId;
+
+	// after the checkings, add the image URL to the temporary sauce object
+	sauceObject.imageUrl = `${req.protocol}://${req.get("host")}/images/${
 		req.file.filename
 	}`;
 
 	const sauce = new Sauce({
 		...sauceObject,
-		imageUrl,
 		likes: 0,
 		dislikes: 0,
 		usersLiked: [],
@@ -388,50 +389,56 @@ exports.getOneSauce = (req, res) => {
  */
 exports.updateSauce = (req, res) => {
 	// first, good to know that a sauce can be updated following two different ways:
-	// - without the image file => JSON received in the request & parsed by express.json()
-	// - with the image file => multipart/form-data received in the request & parsed by multer
+	// - without the image file => JSON received in the request & parsed by express.json() (req.body)
+	// - with the image file => multipart/form-data received in the request & parsed by multer (req.file & req.body)
 
 	const sauce = res.locals.sauce;
 
-	// extract the content-type which could be more complex than just "application/json" for example
+	// extract the content-type, for "multipart/form-data" the content-type is followed by the boundary part which does not interest us here
 	const contentType = req.headers["content-type"].split(";")[0];
 
-	// when using multipart/form-data the image file is required
-	if (contentType === "multipart/form-data" && !req.file)
-		return res.status(400).json({ message: "Fichier image requis." });
+	// WITH THE IMAGE FILE
+	if (contentType === "multipart/form-data") {
+		// when using multipart/form-data the image file is required for good processing
+		if (!req.file) return res.status(400).json({ message: "Image requise." });
 
-	const sauceObject = req.file
-		? {
-				...JSON.parse(req.body.sauce ? req.body.sauce : "{}"),
-				imageUrl: `${req.protocol}://${req.get("host")}/images/${
-					req.file.filename
-				}`,
-		  }
-		: { ...req.body };
+		// return en empty object if the data is not found, the input checks will block further operations
+		const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 
-	// check every inputs
-	if (!checkAddSauceForm(sauceObject, res)) {
-		// remove the image already saved by multer
-		if (req.file)
+		// check every inputs
+		if (!checkAddSauceForm(sauceObject, res)) {
+			// remove the image already saved by multer
 			fs.unlink(`images/${req.file.filename}`, error => {
 				if (error) console.error(error);
 			});
 
-		return;
-	}
+			return;
+		}
 
-	if (req.file) {
+		// after the checkings, add the new image URL to the temporary sauce object
+		sauceObject.imageUrl = `${req.protocol}://${req.get("host")}/images/${
+			req.file.filename
+		}`;
+
 		// delete the previous image from the storage before sauce update
 		const filename = sauce.imageUrl.split("/images/")[1];
 
-		// update the sauce only if the old image file is deleted
 		fs.unlink(`images/${filename}`, error => {
 			if (error) console.error(error);
+
+			// update the sauce only if the old image file is deleted
 			Sauce.updateOne({ _id: sauce._id }, sauceObject)
 				.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
 				.catch(error => res.status(500).json({ error }));
 		});
-	} else {
+	}
+	// WITHOUT THE IMAGE FILE
+	else {
+		const sauceObject = { ...req.body };
+
+		// check every inputs
+		if (!checkAddSauceForm(sauceObject, res)) return;
+
 		Sauce.updateOne({ _id: sauce._id }, sauceObject)
 			.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
 			.catch(error => res.status(500).json({ error }));
