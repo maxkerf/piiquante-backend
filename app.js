@@ -4,15 +4,16 @@ const globalFunctions = require("./globalFunctions");
 
 const mongoose = require("mongoose");
 
-mongoose.connect(process.env.MONGO_DB_KEY).catch(error => {
-	console.error("Failed to connect to MongoDB...");
-	globalFunctions.showError(error);
-});
+mongoose
+	.connect(process.env.MONGO_DB_KEY)
+	.then(() => console.log("Connected to MongoDB!"))
+	.catch(error => {
+		console.error("Failed to connect to MongoDB...");
+		globalFunctions.showError(error);
+	});
 
-// db for database
-const db = mongoose.connection;
-db.once("open", () => console.log("Connected to MongoDB!"));
-db.on("error", globalFunctions.showError);
+// handle errors after initial connection was established
+mongoose.connection.on("error", globalFunctions.showError);
 
 /* Step 2: create & configurate the express app */
 
