@@ -1,5 +1,3 @@
-const globalFunctions = require("./globalFunctions");
-
 /* Step 1: connect to the MongoDB database asynchronously */
 
 const mongoose = require("mongoose");
@@ -9,11 +7,11 @@ mongoose
 	.then(() => console.log("Connected to MongoDB!"))
 	.catch(error => {
 		console.error("Failed to connect to MongoDB...");
-		globalFunctions.showError(error);
+		console.error(error);
 	});
 
 // handle errors after initial connection was established
-mongoose.connection.on("error", globalFunctions.showError);
+mongoose.connection.on("error", console.error);
 
 /* Step 2: create & configurate the express app */
 
@@ -26,7 +24,7 @@ app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
 	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 
-	// Response to preflight request must have http ok status (it allows me to use "router.use(someMiddleware)" without CORS errors)
+	// Response to preflight request must have http ok status (it allows us to use "router.use(someMiddleware)" without CORS errors)
 	if (req.method === "OPTIONS") return res.sendStatus(200);
 
 	next();

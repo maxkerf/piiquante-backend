@@ -1,7 +1,7 @@
 const multer = require("multer");
 
 const storage = multer.diskStorage({
-	destination: (req, file, callback) => callback(null, "images"),
+	destination: (req, file, callback) => callback(null, "images/tmp"),
 	filename: (req, file, callback) => {
 		const currentTime = Date.now();
 		// generate a random number and transform it into a string to slice it and keep only the decimal part
