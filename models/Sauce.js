@@ -4,16 +4,14 @@ const sauceSchema = mongoose.Schema({
 	userId: { type: String, required: true, immutable: true },
 	name: {
 		type: String,
-		required: true,
-		//maxLength: 50,
+		required: [true, "Le nom est requis."],
 		maxLength: [50, "Le nom ne doit pas excéder 50 caractères."],
-		match: /^[a-zA-Z]*$/,
+		match: [/^[a-zA-Z]*$/, "Le nom est invalide."],
 	},
 	manufacturer: {
 		type: String,
 		required: true,
 		maxLength: 50,
-		//maxLength: [50, "Le fabricant ne doit pas excéder 50 caractères."],
 		match: /^[a-zA-Z]*$/,
 	},
 	description: {

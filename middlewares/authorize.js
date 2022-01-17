@@ -17,8 +17,8 @@ exports.token = (req, res, next) => {
 		res.locals.userId = decodedToken.userId;
 
 		next();
-	} catch (error) {
-		res.status(401).json({ error });
+	} catch (e) {
+		res.status(401).json(e);
 	}
 };
 

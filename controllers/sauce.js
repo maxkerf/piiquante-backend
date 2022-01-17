@@ -5,80 +5,62 @@ const LIKE = 1;
 const DISLIKE = -1;
 const UNLIKE = 0;
 const UNDISLIKE = UNLIKE;
-const AUTHORIZED_EXTENSIONS = ["jpg", "jpeg", "png"];
+const IMG_DIR_PATH = "images/";
+const TMP_IMG_DIR_PATH = "images/tmp/";
 
 /* INPUT CHECKS */
 
 /**
- * Check if the image file input is valid or not.
+ * Check if the like status input is valid or not.
  *
- * If it is not valid, send a response with a 400 (bad request) to the client.
- * @param {Object} file The file to check.
- * @param {Object} res The response object of the express app.
- * @returns {boolean} Boolean true if it is valid, false if not.
+ * If it is not valid, throw an error.
+ * @param {*} data The data to check.
  */
-const checkImage = (file, res) => {
-	let isValid = true;
-	let message;
+const checkLikeStatus = data => {
+	// check if the data value is not undefined or null
+	if (data === undefined || data === null)
+		throw Error("L'état du like est requis.");
+	// check if the data type is correct
+	else if (typeof data !== "number")
+		throw Error("L'état du like doit être un nombre.");
+	// check if the data value is correct
+	else if (!(data >= -1 && data <= 1))
+		throw Error("L'état du like doit être compris entre -1 et 1.");
+};
 
-	// check if the file exists
-	if (!file) {
-		isValid = false;
-		message = "Image requise.";
-	}
-	// check if the file type is correct
-	else if (
-		!AUTHORIZED_EXTENSIONS.find(
-			extension => file.mimetype.split("/")[1] === extension
-		)
-	) {
-		isValid = false;
-		message = `Image invalide (extensions autorisées : ${AUTHORIZED_EXTENSIONS.join(
-			"/"
-		)}).`;
+/* MANAGE IMAGE FILE */
 
-		// remove the image already saved by multer from the temporary dir
-		fs.unlink(`images/tmp/${file.filename}`, error => {
-			if (error) console.error(error);
-		});
-	}
-
-	if (!isValid) res.status(400).json({ message });
-
-	return isValid;
+/**
+ * Remove the given image from the server.
+ * @param {string} filename The filename of the image to remove.
+ */
+const removeImage = filename => {
+	fs.unlink(IMG_DIR_PATH + filename, error => {
+		if (error) console.error(error);
+	});
 };
 
 /**
- * Check if the like status input is valid or not.
- *
- * If it is not valid, send a response with a 400 (bad request) to the client.
- * @param {*} data The data to check.
- * @param {Object} res The response object of the express app.
- * @returns {boolean} Boolean true if it is valid, false if not.
+ * Remove the given image from the server temporary directory.
+ * @param {string} filename The filename of the image to remove.
  */
-const checkLikeStatus = (data, res) => {
-	let isValid = true;
-	let message;
+const removeTemporaryImage = filename => {
+	fs.unlink(TMP_IMG_DIR_PATH + filename, error => {
+		if (error) console.error(error);
+	});
+};
 
-	// check if the data value is not empty or undefined
-	if (data === "" || data === undefined) {
-		isValid = false;
-		message = "L'état du like est requis.";
-	}
-	// check if the data type is correct
-	else if (typeof data !== "number") {
-		isValid = false;
-		message = "L'état du like doit être un nombre.";
-	}
-	// check if the data value is correct
-	else if (!(data >= -1 && data <= 1)) {
-		isValid = false;
-		message = "L'état du like doit être compris entre -1 et 1.";
-	}
+/**
+ * Save the given image on the server by moving it from the temporary directory to the final one.
+ * @param {string} filename The filename of the image to save.
+ */
+const saveImage = filename => {
+	const oldPath = TMP_IMG_DIR_PATH + filename;
+	const newPath = IMG_DIR_PATH + filename;
 
-	if (!isValid) res.status(400).json({ message });
-
-	return isValid;
+	fs.rename(oldPath, newPath, error => {
+		if (error) console.error(error);
+	});
 };
 
 /* REQUESTS */
@@ -95,7 +77,7 @@ const checkLikeStatus = (data, res) => {
 exports.getAllSauces = (req, res) => {
 	Sauce.find()
 		.then(sauces => res.status(200).json(sauces))
-		.catch(error => res.status(500).json(error));
+		.catch(e => res.status(500).json({ message: e.message }));
 };
 
 /**
@@ -109,8 +91,6 @@ exports.getAllSauces = (req, res) => {
  * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
  */
 exports.createSauce = async (req, res) => {
-	if (!checkImage(req.file, res)) return;
-
 	const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 	const filename = req.file.filename;
 
@@ -129,21 +109,13 @@ exports.createSauce = async (req, res) => {
 			usersDisliked: [],
 		});
 
-		// move the image from the temporary dir to the images dir
-		const oldPath = `images/tmp/${filename}`;
-		const newPath = `images/${filename}`;
-		fs.rename(oldPath, newPath, error => {
-			if (error) console.error(error);
-		});
+		saveImage(filename);
 
 		res.status(201).json({ message: "Sauce enregistrée !" });
-	} catch (error) {
-		// remove the image already saved by multer from the temporary dir
-		fs.unlink(`images/tmp/${filename}`, error => {
-			if (error) console.error(error);
-		});
+	} catch (e) {
+		removeTemporaryImage(filename);
 
-		res.status(400).json(error);
+		res.status(400).json({ message: e.message });
 	}
 };
 
@@ -172,16 +144,14 @@ exports.getOneSauce = (req, res) => {
  */
 exports.updateSauce = async (req, res) => {
 	// first, good to know that a sauce can be updated following two different ways:
-	// - without the image file => JSON received in the request & parsed by express.json() (req.body)
-	// - with the image file => multipart/form-data received in the request & parsed by multer (req.file & req.body)
+	// - without the image file => JSON ("application/json") received in the request & parsed by express.json() (req.body)
+	// - with the image file => "multipart/form-data" received in the request & parsed by multer (req.file & req.body)
 
 	const sauce = res.locals.sauce;
-	// extract the content-type, for "multipart/form-data" the content-type is followed by the boundary part which does not interest us here
-	const contentType = req.headers["content-type"].split(";")[0];
 
 	// WITH THE IMAGE FILE
-	if (contentType === "multipart/form-data") {
-		if (!checkImage(req.file, res)) return;
+	if (req.headers["content-type"].includes("multipart/form-data")) {
+		if (!req.file) return res.status(400).json({ message: "Image requise." });
 
 		const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 		const filename = req.file.filename;
@@ -201,26 +171,14 @@ exports.updateSauce = async (req, res) => {
 		try {
 			await sauce.save();
 
-			// remove the old image
-			fs.unlink(`images/${oldFilename}`, error => {
-				if (error) console.error(error);
-			});
-
-			// remove the image already saved by multer from the temporary dir
-			const oldPath = `images/tmp/${filename}`;
-			const newPath = `images/${filename}`;
-			fs.rename(oldPath, newPath, error => {
-				if (error) console.error(error);
-			});
+			removeImage(oldFilename);
+			saveImage(filename);
 
 			res.status(200).json({ message: "Sauce modifiée !" });
-		} catch (error) {
-			// remove the image from the temporary dir
-			fs.unlink(`images/tmp/${filename}`, error => {
-				if (error) console.error(error);
-			});
+		} catch (e) {
+			removeTemporaryImage(filename);
 
-			res.status(400).json(error);
+			res.status(400).json({ message: e.message });
 		}
 	}
 	// WITHOUT THE IMAGE FILE
@@ -238,14 +196,14 @@ exports.updateSauce = async (req, res) => {
 		sauce
 			.save()
 			.then(() => res.status(200).json({ message: "Sauce modifiée !" }))
-			.catch(error => res.status(400).json(error));
+			.catch(e => res.status(400).json({ message: e.message }));
 	}
 };
 
 /**
  * Delete a sauce stored in the database.
  *
- * If an error occured, send a 500 (internal server error) code to the client.
+ * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
  *
  * If everything goes well, send a 200 (OK) code to the client.
  * @param {*} req
@@ -255,14 +213,11 @@ exports.deleteSauce = (req, res) => {
 	const sauce = res.locals.sauce;
 	const filename = sauce.imageUrl.split("/images/")[1];
 
-	// delete the sauce only if the image file is deleted
-	fs.unlink(`images/${filename}`, error => {
-		if (error) console.error(error);
+	removeImage(filename);
 
-		Sauce.deleteOne({ _id: sauce._id })
-			.then(() => res.status(200).json({ message: "Sauce supprimée !" }))
-			.catch(error => res.status(500).json(error));
-	});
+	Sauce.deleteOne({ _id: sauce._id })
+		.then(() => res.status(200).json({ message: "Sauce supprimée !" }))
+		.catch(e => res.status(400).json({ message: e.message }));
 };
 
 /**
@@ -281,9 +236,9 @@ exports.likeSauce = (req, res) => {
 	const likeStatus = req.body.like;
 	let message;
 
-	if (!checkLikeStatus(likeStatus, res)) return;
-
 	try {
+		checkLikeStatus(likeStatus);
+
 		switch (likeStatus) {
 			case LIKE:
 				if (sauce.hasLiked(userId)) throw Error("Sauce déjà likée...");
@@ -316,12 +271,12 @@ exports.likeSauce = (req, res) => {
 
 			default:
 		}
-	} catch (error) {
-		return res.status(400).json({ message: error.message });
+	} catch (e) {
+		return res.status(400).json({ message: e.message });
 	}
 
 	sauce
 		.save()
 		.then(() => res.status(200).json({ message }))
-		.catch(error => res.status(400).json(error));
+		.catch(e => res.status(400).json({ message: e.message }));
 };

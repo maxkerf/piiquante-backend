@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middlewares/authorize");
-const multer = require("../middlewares/multer");
+const uploadImage = require("../middlewares/uploadImage");
 
 const Sauce = require("../models/Sauce");
 const sauceCtrl = require("../controllers/sauce");
@@ -13,12 +13,12 @@ router.use(auth.token);
 router
 	.route("/")
 	.get(sauceCtrl.getAllSauces)
-	.post(multer, sauceCtrl.createSauce);
+	.post(uploadImage, sauceCtrl.createSauce);
 
 router
 	.route("/:id")
 	.get(sauceCtrl.getOneSauce)
-	.put(auth.sauce, multer, sauceCtrl.updateSauce)
+	.put(auth.sauce, uploadImage, sauceCtrl.updateSauce)
 	.delete(auth.sauce, sauceCtrl.deleteSauce);
 
 router.post("/:id/like", sauceCtrl.likeSauce);
@@ -28,13 +28,14 @@ router.param("id", async (req, res, next, sauceId) => {
 	try {
 		const sauce = await Sauce.findById(sauceId);
 
-		if (!sauce) throw { message: "Sauce introuvable..." };
+		if (!sauce)
+			return res.status(404).json({ message: "Sauce introuvable..." });
 
 		res.locals.sauce = sauce;
 
 		next();
-	} catch (error) {
-		res.status(400).json(error);
+	} catch (e) {
+		res.status(400).json({ message: e.message });
 	}
 });
 

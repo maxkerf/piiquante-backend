@@ -8,42 +8,25 @@ const User = require("../models/User");
 /**
  * Check if the password input is valid or not.
  *
- * If it is not valid, send a response with a 400 (bad request) to the client.
+ * If it is not valid, throw an error.
  * @param {*} data The data to check.
- * @param {Object} res The response object of the express app.
- * @returns {boolean} Boolean true if it is valid, false if not.
  */
-const checkPassword = (data, res) => {
-	let isValid = true;
-	let message;
-
-	// check if the data value is not empty or undefined
-	if (data === "" || data === undefined) {
-		isValid = false;
-		message = "Mot de passe requis.";
-	}
+const checkPassword = data => {
+	// check if the data value is not empty, undefined or null
+	if (data === "" || data === undefined || data === null)
+		throw Error("Mot de passe requis.");
 	// check if the data type is correct
-	else if (typeof data !== "string") {
-		isValid = false;
-		message = "Le mot de passe doit être une chaîne de caractères.";
-	}
+	else if (typeof data !== "string")
+		throw Error("Le mot de passe doit être une chaîne de caractères.");
 	// check if the data value is correct
-	else if (!(data.length <= 50)) {
-		isValid = false;
-		message = "Le mot de passe ne doit pas excéder 50 caractères.";
-	}
-
-	if (!isValid) res.status(400).json({ message });
-
-	return isValid;
+	else if (!(data.length <= 50))
+		throw Error("Le mot de passe ne doit pas excéder 50 caractères.");
 };
 
 /* REQUESTS */
 
 /**
  * Sign up a new user and store it in the database.
- *
- * If an error occured, send a 500 (internal server error) code to the client.
  *
  * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
  *
@@ -57,7 +40,7 @@ exports.signup = async (req, res) => {
 		const email = req.body.email;
 		const password = req.body.password;
 
-		if (!checkPassword(password, res)) return;
+		checkPassword(password);
 
 		const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -67,15 +50,13 @@ exports.signup = async (req, res) => {
 		});
 
 		res.status(201).json({ message: "Utilisateur créé !" });
-	} catch (error) {
-		res.status(400).json(error);
+	} catch (e) {
+		res.status(400).json({ message: e.message });
 	}
 };
 
 /**
  * Login a user.
- *
- * If an error occured, send a 500 (internal server error) code to the client.
  *
  * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
  *
@@ -94,7 +75,7 @@ exports.login = async (req, res) => {
 		if (!user)
 			return res.status(400).json({ message: "Utilisateur non trouvé..." });
 
-		if (!checkPassword(password, res)) return;
+		checkPassword(password);
 
 		const isValid = await bcrypt.compare(password, user.password);
 
@@ -107,7 +88,7 @@ exports.login = async (req, res) => {
 		});
 
 		res.status(200).json({ userId, token });
-	} catch (error) {
-		res.status(400).json(error);
+	} catch (e) {
+		res.status(400).json({ message: e.message });
 	}
 };

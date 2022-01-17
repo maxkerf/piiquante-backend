@@ -4,9 +4,9 @@ const uniqueValidator = require("mongoose-unique-validator");
 const userSchema = mongoose.Schema({
 	email: {
 		type: String,
-		required: true,
-		lowercase: true,
 		unique: true,
+		lowercase: true,
+		required: true,
 		maxLength: 50,
 		// same regex as the one used in type="email" from W3C (found on https://emailregex.com/)
 		match:
