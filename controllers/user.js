@@ -58,7 +58,7 @@ exports.signup = async (req, res) => {
 /**
  * Login a user.
  *
- * If an error is detected (checkings, etc.), send a 400 (bad request) code to the client.
+ * If an error is detected (checkings, etc.), send a 400 (bad request) or a 500 (internal server error) code to the client.
  *
  * If everything goes well, send a 200 (OK) code to the client with an access token for further requests.
  * @param {*} req
@@ -66,29 +66,37 @@ exports.signup = async (req, res) => {
  * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
  */
 exports.login = async (req, res) => {
+	const email = req.body.email;
+	const password = req.body.password;
+
+	// check email & password inputs + verify that the email exists
+	let user;
 	try {
-		const email = req.body.email;
-		const password = req.body.password;
+		user = await User.findOne({ email });
 
-		const user = await User.findOne({ email });
-
-		if (!user)
-			return res.status(400).json({ message: "Utilisateur non trouvé..." });
+		if (!user) throw Error("Utilisateur non trouvé...");
 
 		checkPassword(password);
+	} catch (e) {
+		return res.status(400).json({ message: e.message });
+	}
 
-		const isValid = await bcrypt.compare(password, user.password);
+	// verify that the password is good
+	const isValid = await bcrypt.compare(password, user.password);
 
-		if (!isValid)
-			return res.status(401).json({ message: "Mot de passe incorrect..." });
+	if (!isValid)
+		return res.status(401).json({ message: "Mot de passe incorrect..." });
 
-		const userId = user._id;
+	// generate a token & send a reponse
+	const userId = user._id;
+	try {
 		const token = jwt.sign({ userId }, process.env.TOKEN_SECRET_KEY, {
 			expiresIn: "24h",
 		});
 
 		res.status(200).json({ userId, token });
 	} catch (e) {
-		res.status(400).json({ message: e.message });
+		console.error(e);
+		res.status(500).json({ message: e.message });
 	}
 };
