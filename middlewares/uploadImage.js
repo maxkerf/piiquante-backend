@@ -17,6 +17,7 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, callback) => {
 	const extension = file.mimetype.split("/")[1];
+
 	if (!AUTHORIZED_EXTENSIONS.includes(extension))
 		return callback(
 			Error(

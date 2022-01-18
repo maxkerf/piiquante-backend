@@ -1,4 +1,5 @@
-require("dotenv").config();
+const dotenv = require("dotenv");
+dotenv.config();
 
 const http = require("http");
 const app = require("./app");
@@ -11,9 +12,10 @@ try {
 	process.exit(1); // the app can't run without the backend server on
 }
 
-server.on("listening", () =>
-	console.log(`Listening on port ${server.address().port}!`)
-);
+server.on("listening", () => {
+	console.log("Welcome to Piiquante 🌶");
+	console.log(`Listening on port ${server.address().port} ✔`);
+});
 server.on("error", error => {
 	console.error(error);
 	process.exit(1);

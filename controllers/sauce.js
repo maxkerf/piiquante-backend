@@ -35,9 +35,7 @@ const checkLikeStatus = data => {
  * @param {string} filename The filename of the image to remove.
  */
 const removeImage = filename => {
-	fs.unlink(IMG_DIR_PATH + filename, error => {
-		if (error) console.error(error);
-	});
+	fs.unlinkSync(IMG_DIR_PATH + filename);
 };
 
 /**
@@ -45,9 +43,7 @@ const removeImage = filename => {
  * @param {string} filename The filename of the image to remove.
  */
 const removeTemporaryImage = filename => {
-	fs.unlink(TMP_IMG_DIR_PATH + filename, error => {
-		if (error) console.error(error);
-	});
+	fs.unlinkSync(TMP_IMG_DIR_PATH + filename);
 };
 
 /**
@@ -58,9 +54,7 @@ const saveImage = filename => {
 	const oldPath = TMP_IMG_DIR_PATH + filename;
 	const newPath = IMG_DIR_PATH + filename;
 
-	fs.rename(oldPath, newPath, error => {
-		if (error) console.error(error);
-	});
+	fs.renameSync(oldPath, newPath);
 };
 
 /* REQUESTS */
@@ -91,6 +85,8 @@ exports.getAllSauces = (req, res) => {
  * @returns If an error occured or is detected, stop the process by catching the error or returning the function.
  */
 exports.createSauce = async (req, res) => {
+	if (!req.file) return res.status(400).json({ message: "Image requise." });
+
 	const sauceObject = req.body.sauce ? JSON.parse(req.body.sauce) : {};
 	const filename = req.file.filename;
 
