@@ -2,7 +2,7 @@
 	"name": "backend",
 	"version": "1.0.0",
 	"description": "",
-	"main": "./dist/bundle.js",
+	"main": "./server.js",
 	"scripts": {
 		"build": "webpack",
 		"watch": "webpack --watch",

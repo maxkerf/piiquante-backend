@@ -1,8 +1,14 @@
 const dotenv = require("dotenv");
 dotenv.config();
 
-const http = require("http");
+/* Step 1: connect to the MongoDB database asynchronously */
+require("./database");
+
+/* Step 2: create & configurate the express app */
 const app = require("./app");
+
+/* Step 3: create & launch the http server */
+const http = require("http");
 const server = http.createServer(app);
 
 try {

@@ -1,20 +1,3 @@
-/* Step 1: connect to the MongoDB database asynchronously */
-
-const mongoose = require("mongoose");
-
-mongoose
-	.connect(process.env.MONGO_DB_KEY)
-	.then(() => console.log("Connected to MongoDB ✔"))
-	.catch(error => {
-		console.error("Failed to connect to MongoDB ✖");
-		console.error(error);
-	});
-
-// handle errors after initial connection was established
-mongoose.connection.on("error", console.error);
-
-/* Step 2: create & configurate the express app */
-
 const express = require("express");
 const app = express();
 
@@ -29,7 +12,7 @@ app.use((req, res, next) => {
 
 	next();
 });
-// avoid "/images" URLs considered as routes
+// avoid "/images" URLs considered as routes/requests
 app.use("/images", express.static("images"));
 // parse requests with JSON & create a body object (req.body)
 app.use(express.json());
