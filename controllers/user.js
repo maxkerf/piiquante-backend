@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const validator = require("validator");
 
 const User = require("../models/User");
 
@@ -21,6 +22,10 @@ const checkPassword = data => {
 	// check if the data value is correct
 	else if (!(data.length <= 50))
 		throw Error("Le mot de passe ne doit pas excéder 50 caractères.");
+	else if (!validator.isStrongPassword(data))
+		throw Error(
+			"Le mot de passe n'est pas valide. Liste des requis :\n- 8 caractères minimum\n- 1 lettre minuscule\n- 1 lettre majuscule\n- 1 chiffre\n - 1 symbole "
+		);
 };
 
 /* REQUESTS */
@@ -44,6 +49,7 @@ exports.signup = async (req, res) => {
 
 		const hashedPassword = await bcrypt.hash(password, 10);
 
+		// email input is validated here
 		await User.create({
 			email,
 			password: hashedPassword,
@@ -68,24 +74,27 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
 	const email = req.body.email;
 	const password = req.body.password;
+	const WRONG_LOGIN_ERROR_MSG = "L'email ou le mot de passe est incorrect.";
 
-	// check email & password inputs + verify that the email exists
-	let user;
+	// check email & password inputs
 	try {
-		user = await User.findOne({ email });
+		// email & password are required
+		if (email === "" || email === undefined || email === null)
+			throw Error("Email requis.");
 
-		if (!user) throw Error("Utilisateur non trouvé...");
-
-		checkPassword(password);
+		if (password === "" || password === undefined || password === null)
+			throw Error("Mot de passe requis.");
 	} catch (e) {
 		return res.status(400).json({ message: e.message });
 	}
 
+	// verify that the email exists
+	const user = await User.findOne({ email });
+	if (!user) return res.status(401).json({ message: WRONG_LOGIN_ERROR_MSG });
+
 	// verify that the password is good
 	const isValid = await bcrypt.compare(password, user.password);
-
-	if (!isValid)
-		return res.status(401).json({ message: "Mot de passe incorrect..." });
+	if (!isValid) return res.status(401).json({ message: WRONG_LOGIN_ERROR_MSG });
 
 	// generate a token & send a reponse
 	const userId = user._id;

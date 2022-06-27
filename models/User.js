@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const uniqueValidator = require("mongoose-unique-validator");
+const validator = require("validator");
 
 const userSchema = mongoose.Schema({
 	email: {
@@ -8,9 +9,12 @@ const userSchema = mongoose.Schema({
 		lowercase: true,
 		required: true,
 		maxLength: 50,
-		// same regex as the one used in type="email" from W3C (found on https://emailregex.com/)
-		match:
-			/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
+		validate: {
+			validator: function (data) {
+				return validator.isEmail(data);
+			},
+			message: "L'email n'est pas valide.",
+		},
 	},
 	password: { type: String, required: true },
 });
