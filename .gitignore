@@ -1,2 +1,13 @@
 node_modules
 .env
+
+# Ignore everything in the "images" directory
+images/*
+# Except the ".gitkeep" file & the "tmp" directory
+!images/.gitkeep
+!images/tmp
+
+# Ignore everything in the "tmp" directory
+images/tmp/*
+# Except the ".gitkeep" file
+!images/tmp/.gitkeep

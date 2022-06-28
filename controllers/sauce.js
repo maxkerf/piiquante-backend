@@ -17,15 +17,23 @@ const TMP_IMG_DIR_PATH = "images/tmp/";
  * @param {*} data The data to check.
  */
 const checkLikeStatus = data => {
+	const GENERIC_ERROR_MSG = "Mauvais format de donnée.";
+
 	// check if the data value is not undefined or null
-	if (data === undefined || data === null)
-		throw Error("L'état du like est requis.");
+	if (data === undefined || data === null) {
+		console.error("L'état du like est requis.");
+		throw Error(GENERIC_ERROR_MSG);
+	}
 	// check if the data type is correct
-	else if (typeof data !== "number")
-		throw Error("L'état du like doit être un nombre.");
+	else if (typeof data !== "number") {
+		console.error("L'état du like doit être un nombre.");
+		throw Error(GENERIC_ERROR_MSG);
+	}
 	// check if the data value is correct
-	else if (!(data >= -1 && data <= 1))
-		throw Error("L'état du like doit être compris entre -1 et 1.");
+	else if (!(data >= -1 && data <= 1)) {
+		console.error("L'état du like doit être compris entre -1 et 1.");
+		throw Error(GENERIC_ERROR_MSG);
+	}
 };
 
 /* MANAGE IMAGE FILE */
@@ -230,45 +238,54 @@ exports.likeSauce = (req, res) => {
 	const userId = res.locals.userId;
 	const sauce = res.locals.sauce;
 	const likeStatus = req.body.like;
-	let message;
 
 	try {
 		checkLikeStatus(likeStatus);
-
-		switch (likeStatus) {
-			case LIKE:
-				if (sauce.hasLiked(userId)) throw Error("Sauce déjà likée...");
-				else if (sauce.hasDisliked(userId)) sauce.undislike(userId);
-
-				sauce.like(userId);
-				message = "Sauce likée !";
-				break;
-
-			case DISLIKE:
-				if (sauce.hasDisliked(userId)) throw Error("Sauce déjà dislikée...");
-				else if (sauce.hasLiked(userId)) sauce.unlike(userId);
-
-				sauce.dislike(userId);
-				message = "Sauce dislikée !";
-				break;
-
-			case UNLIKE:
-			case UNDISLIKE:
-				if (sauce.hasLiked(userId)) {
-					sauce.unlike(userId);
-					message = "Sauce unlikée !";
-				} else if (sauce.hasDisliked(userId)) {
-					sauce.undislike(userId);
-					message = "Sauce undislikée !";
-				} else {
-					throw Error("Sauce pas likée ni dislikée...");
-				}
-				break;
-
-			default:
-		}
 	} catch (e) {
 		return res.status(400).json({ message: e.message });
+	}
+
+	let message;
+
+	switch (likeStatus) {
+		case LIKE:
+			if (sauce.hasLiked(userId)) {
+				message = "Sauce déjà likée...";
+				break;
+			} else if (sauce.hasDisliked(userId)) {
+				sauce.undislike(userId);
+			}
+
+			sauce.like(userId);
+			message = "Sauce likée !";
+			break;
+
+		case DISLIKE:
+			if (sauce.hasDisliked(userId)) {
+				message = "Sauce déjà dislikée...";
+				break;
+			} else if (sauce.hasLiked(userId)) {
+				sauce.unlike(userId);
+			}
+
+			sauce.dislike(userId);
+			message = "Sauce dislikée !";
+			break;
+
+		case UNLIKE:
+		case UNDISLIKE:
+			if (sauce.hasLiked(userId)) {
+				sauce.unlike(userId);
+				message = "Sauce unlikée !";
+			} else if (sauce.hasDisliked(userId)) {
+				sauce.undislike(userId);
+				message = "Sauce undislikée !";
+			} else {
+				message = "Sauce pas likée ni dislikée...";
+			}
+			break;
+
+		default:
 	}
 
 	sauce

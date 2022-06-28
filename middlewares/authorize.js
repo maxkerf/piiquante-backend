@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 /**
  * Check with the "jsonwebtoken" library if the token specified in the authorization header is valid or not.
@@ -8,13 +9,21 @@ const jwt = require("jsonwebtoken");
  * @param {*} res
  * @param {*} next
  */
-exports.token = (req, res, next) => {
+exports.token = async (req, res, next) => {
 	try {
 		// optional chaining "?." checks if authorization exists or not & return "undefined" if not
 		const token = req.headers.authorization?.split(" ")[1];
 		const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET_KEY);
+		const userId = decodedToken.userId;
 
-		res.locals.userId = decodedToken.userId;
+		// check if the user still exists
+		const user = await User.findById(userId);
+		if (!user) throw { message: "L'utilisateur n'existe plus" };
+
+		if (req.body.userId && req.body.userId !== userId)
+			throw { message: "Non autorisé" };
+
+		res.locals.userId = userId;
 
 		next();
 	} catch (e) {

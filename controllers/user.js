@@ -24,7 +24,7 @@ const checkPassword = data => {
 		throw Error("Le mot de passe ne doit pas excéder 50 caractères.");
 	else if (!validator.isStrongPassword(data))
 		throw Error(
-			"Le mot de passe n'est pas valide. Liste des requis :\n- 8 caractères minimum\n- 1 lettre minuscule\n- 1 lettre majuscule\n- 1 chiffre\n - 1 symbole "
+			"Le mot de passe n'est pas valide. Liste des requis :\n- 8 caractères minimum\n- 1 lettre minuscule\n- 1 lettre majuscule\n- 1 chiffre\n- 1 symbole"
 		);
 };
 

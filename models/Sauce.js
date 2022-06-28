@@ -6,13 +6,19 @@ const sauceSchema = mongoose.Schema({
 		type: String,
 		required: [true, "Le nom est requis."],
 		maxLength: [50, "Le nom ne doit pas excéder 50 caractères."],
-		match: [/^[a-zA-Z]*$/, "Le nom est invalide."],
+		match: [
+			/^[a-zA-Z\d '\-]*$/,
+			"Le nom est invalide. Caractères autorisés :\n- lettres minuscules\n- lettres majuscules\n- chiffres\n- autres ('- )",
+		],
 	},
 	manufacturer: {
 		type: String,
 		required: true,
 		maxLength: 50,
-		match: /^[a-zA-Z]*$/,
+		match: [
+			/^[a-zA-Z\d '\-()]*$/,
+			"Le champ manufacturer est invalide. Caractères autorisés :\n- lettres minuscules\n- lettres majuscules\n- chiffres\n- autres ('- ())",
+		],
 	},
 	description: {
 		type: String,
@@ -23,7 +29,10 @@ const sauceSchema = mongoose.Schema({
 		type: String,
 		required: true,
 		maxLength: 50,
-		match: /^[a-zA-Z]*$/,
+		match: [
+			/^[a-zA-Z\d '\-]*$/,
+			"Le champ main pepper est invalide. Caractères autorisés :\n- lettres minuscules\n- lettres majuscules\n- chiffres\n- autres ('- )",
+		],
 	},
 	imageUrl: { type: String, required: true },
 	heat: { type: Number, required: true, min: 1, max: 10 },
